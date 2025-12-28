@@ -1,0 +1,15 @@
+tqdm
+pymupdf
+faiss-cpu
+bitsandbytes
+langchain
+langchain-text-splitters
+sentence-transformers
+FlagEmbedding
+requests
+pandas
+numpy
+transformers
+huggingface_hub
+torch
+python-dotenv
