@@ -6,7 +6,6 @@ That can be done using two ways:
 """
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from tqdm import tqdm
-
 def text_chunking(content: list) -> list:
   # saving the original list
   all_chunks = []
