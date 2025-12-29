@@ -52,7 +52,7 @@ def main():
     print("filtered_indices:", filtered_indices)
     print("Reranking started...")
     reranked_results = apply_reranking(filtered_indices, all_chunks, user_query)
-    reranked_indices = [idx[0] for idx in reranked_results]
+    reranked_indices = [[idx[0] for idx in reranked_results]]
     print("reranked_results:", reranked_indices)
     print("Displaying top result page...")
     display_page(reranked_indices, all_chunks)
