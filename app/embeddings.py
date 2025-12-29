@@ -43,7 +43,7 @@ def save_to_faiss(embeddings: list,
   # Add vectors to index
   index.add(matrix)
   if save_to_local:
-    faiss.write_index(index, file_name)
+    faiss.write_index(index, "embeddings/"+file_name)
 
   return {
         "status": "success",

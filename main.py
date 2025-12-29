@@ -2,7 +2,7 @@ from app.config import hf_token
 from app.loader import get_list_of_available_pdfs, open_and_read_pdf
 from app.chunker import text_chunking
 from app.embeddings import embed_chunks, save_to_faiss
-
+import os
 def main():
     print("APP STARTED")
     """Main function to run the application logic."""
