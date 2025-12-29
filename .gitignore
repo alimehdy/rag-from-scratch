@@ -1,6 +1,6 @@
 /.venv/
-/app/__pycache__/
-/embeddings/
+/app/__pycache__/*
+/embeddings/*
 *.json
 *.index
 *.faiss

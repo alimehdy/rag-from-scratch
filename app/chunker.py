@@ -6,6 +6,7 @@ That can be done using two ways:
 """
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from tqdm import tqdm
+import json
 def text_chunking(content: list) -> list:
   # saving the original list
   all_chunks = []
@@ -44,4 +45,11 @@ def text_chunking(content: list) -> list:
     # We can filter the results and remove small chunks
     # Append to global list
     all_chunks.extend(chunk_dicts)
+    # with open('all_chunks.json', 'w') as f:
+    #     json.dump(all_chunks, f)
   return all_chunks
+
+def read_json_file(file_path):
+    with open(file_path, 'r') as f:
+        data = json.load(f)
+    return data
