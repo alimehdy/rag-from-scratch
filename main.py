@@ -2,7 +2,8 @@ from app.config import hf_token
 from app.loader import get_list_of_available_pdfs, open_and_read_pdf
 from app.chunker import text_chunking, read_json_file
 from app.embeddings import embed_chunks, save_to_faiss
-from app.retriever import search_docs, apply_reranking, build_llm_prompt, display_page
+from app.retriever import search_docs, apply_reranking, display_page
+from app.llm import build_llm_prompt, call_llm
 import os
 def main():
     print("APP STARTED")
@@ -54,8 +55,14 @@ def main():
     reranked_results = apply_reranking(filtered_indices, all_chunks, user_query)
     reranked_indices = [[idx[0] for idx in reranked_results]]
     print("reranked_results:", reranked_indices)
-    print("Displaying top result page...")
-    display_page(reranked_indices, all_chunks)
+    print("Building LLM prompt...")
+    prompt = build_llm_prompt(reranked_results, all_chunks, user_query)
+    print("Sending prompt to LLM...")
+    response = call_llm(prompt)
+    print("LLM Response:")
+    print(response)
+    # print("Displaying top result page...")
+    # display_page(reranked_indices, all_chunks)
 
 if __name__ == "__main__":
     main()

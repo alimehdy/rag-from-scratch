@@ -13,3 +13,4 @@ transformers
 huggingface_hub
 torch
 python-dotenv
+ollama
