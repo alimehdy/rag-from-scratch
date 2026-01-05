@@ -1,3 +1,6 @@
+# check ollama's GPU if it's true or false
+# use an LLM in ollama that's already quantized for faster response
+
 # find a new re-ranker for multi-lingual use
 # find a new embedder with faster performance
 # scan PDFs having texts and augment them

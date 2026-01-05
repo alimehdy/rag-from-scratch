@@ -7,7 +7,8 @@ import faiss
 import numpy as np
 
 def embed_chunks(chunks: list, embedding_model, hf_token):
-  login(token=hf_token)
+  # Use this only if we're getting the embedder online
+  # login(token=hf_token)
   embedding_model = SentenceTransformer(model_name_or_path = embedding_model, device="cpu")
   embedding_model.to("cpu")
   print(f"Number of chunks to embed: {len(chunks)}")

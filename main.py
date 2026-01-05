@@ -8,7 +8,7 @@ import os
 def main():
     print("APP STARTED")
     # Main variables
-    embedding_model_name = "BAAI/bge-large-en-v1.5"
+    embedding_model_name = "./models/embedders/BAAI/bge-large-en-v1.5"
     folder_path = "data"  # Update this path as needed
     pdf_list = get_list_of_available_pdfs(folder_path)
     all_chunks = []

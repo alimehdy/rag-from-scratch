@@ -45,10 +45,8 @@ def call_llm(user_prompt:str, model:str="phi3") -> str:
     Use ONLY the information provided in the sources below to answer the question.
     If the answer cannot be found in the sources, say "I don't know".
     When answering:
-    - Cite the source number(s) you used, including title (file name) and page number.
+    - It is essesntial that you cite the source number(s) you used, including title (file name) and page number.
     - Do NOT add information not present in the sources.
-    However, you add a new section at the end where you ask the user if he wants to elaborate a little bit more.
-    If yes, elaborate a little bit emphasizing that the elaboration was out of the contexts provided.
     """
     response = chat(
         model=model,

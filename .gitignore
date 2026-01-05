@@ -1,7 +1,9 @@
 /.venv/
 /app/__pycache__/*
 /embeddings/*
-/media/
+/media/*
+/models/embedders/*
+/models/rerankers/*
 *.json
 *.index
 *.faiss

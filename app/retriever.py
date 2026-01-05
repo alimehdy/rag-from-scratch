@@ -28,7 +28,9 @@ def search_docs(query: str, faiss_indexes, embedding_model_name, k:int=10, dista
 
 
 def apply_reranking(filtered_indices, all_chunks, user_query):
-  reranker = FlagReranker("BAAI/bge-reranker-v2-gemma", use_fp16=True)
+  reranker = FlagReranker("./models/rerankers/BAAI/bge-reranker-v2-gemma", 
+                                          use_fp16=True,
+                                          local_files_only=True)
   # Get retrieved docs from all_chunks
   indices = filtered_indices[0]
   filtered_docs = [
