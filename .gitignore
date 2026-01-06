@@ -1,9 +1,11 @@
+/__pycache__/*
 /.venv/
-/app/__pycache__/*
-/embeddings/*
-/media/*
-/models/embedders/*
-/models/rerankers/*
+/.vscode/
+/rag_core/app/__pycache__/*
+/rag_core/embeddings/*
+/rag_core/media/*
+/rag_core/models/embedders/*
+/rag_core/models/rerankers/*
 *.json
 *.index
 *.faiss

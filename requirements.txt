@@ -14,3 +14,4 @@ huggingface_hub
 torch
 python-dotenv
 ollama
+streamlit
