@@ -1,6 +1,7 @@
 /__pycache__/*
 /.venv/
 /.vscode/
+/rag_core/__pycache__/*
 /rag_core/app/__pycache__/*
 /rag_core/embeddings/*
 /rag_core/media/*
