@@ -1,51 +1,24 @@
-from rag_core.app.config import hf_token
-from rag_core.app.loader import get_list_of_available_pdfs, open_and_read_pdf
-from rag_core.app.chunker import text_chunking, read_json_file
-from rag_core.app.embeddings import embed_chunks, save_to_faiss
-from rag_core.app.retriever import search_docs, apply_reranking, display_page
-from rag_core.app.llm import build_llm_prompt, call_llm
+import json
+# from app.config import hf_token
+# from app.loader import get_list_of_available_pdfs, open_and_read_pdf
+# from app.chunker import text_chunking, read_json_file
+# from app.embeddings import embed_chunks, save_to_faiss
+from app.retriever import search_docs, apply_reranking, display_page
+from app.llm import build_llm_prompt, call_llm
 import os
 def pipeline():
     print("APP STARTED")
     # Main variables
-    # TODO: move the embedding methods to embeddings.py
-    # This part must be clean and directly starts with the retrieval-augmented generation pipeline
-    # If index file does not exist ask the users if they want to embedd their data
+    """TODO: avoid saving large chunks metadata in json and move each array
+    of metadata into the chunk itself."""
+    
+    # TODO: make the model name used all across and when changed only change in one place
     embedding_model_name = "./rag_core/models/embedders/BAAI/bge-large-en-v1.5"
     folder_path = "./rag_core/data"  # Update this path as needed
-    pdf_list = get_list_of_available_pdfs(folder_path)
+    json_chunks = "./rag_core/embeddings/pdf_pages.json"  # Update this path as needed
     all_chunks = []
-
-    if "embeddings.index" not in os.listdir("./rag_core/embeddings/"):
-        print("Embeddings index already exists. Exiting to avoid reprocessing.")
-        """Main function to run the application logic."""
-        print(f"Hugging Face Token exists")
-        print("Program is running as a standalone script.")
-        print("Loading PDFs from the specified folder...")
-
-        if pdf_list:
-            print(f"Found {len(pdf_list)} PDF files.")
-            pdf_pages = open_and_read_pdf(pdf_list)
-            print(f"Extracted {len(pdf_pages)} pages from the PDFs.")
-            # print(pdf_pages[0])
-            print("Chunking process started...")
-            all_chunks = text_chunking(pdf_pages)
-            print(f"Generated {len(all_chunks)} text chunks from the pages.")
-            print("Embedding process started...")
-            res = embed_chunks(all_chunks, embedding_model_name, hf_token)
-            print("Saving embeddings to FAISS index...")
-            faiss_info = save_to_faiss(
-                embeddings=[item["embedding"] for item in res],
-                save_to_local=True,
-                distance_metric='L2',
-                file_name="embeddings.index"
-            )
-        else:
-            print("No PDF files found.")
-            return
-    if not all_chunks:
-        pdf_pages = open_and_read_pdf(pdf_list)
-        all_chunks = text_chunking(pdf_pages)
+    with open(json_chunks, "r") as f:
+        all_chunks = json.load(f)
     user_query = input("Enter your query: ")
     print(f"You entered: {user_query}")
     results = search_docs(user_query, "./rag_core/embeddings/embeddings.index", embedding_model_name, k=10, distance_threshold=0.75)

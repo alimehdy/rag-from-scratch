@@ -2,6 +2,8 @@
 import faiss
 
 from sentence_transformers import SentenceTransformer
+from transformers import AutoTokenizer
+
 from FlagEmbedding import FlagReranker
 import numpy as np
 import pymupdf
@@ -9,6 +11,7 @@ import pymupdf
 def search_docs(query: str, faiss_indexes, embedding_model_name, k:int=10, distance_threshold:float=0.75):
   # Read indexex
   index = faiss.read_index(faiss_indexes)
+
   embedding_model = SentenceTransformer(embedding_model_name)
   embedded_query = embedding_model.encode(query)
   query_vector = np.array(embedded_query).astype('float32').reshape(1, -1)
@@ -34,7 +37,7 @@ def apply_reranking(filtered_indices, all_chunks, user_query):
   # Get retrieved docs from all_chunks
   indices = filtered_indices[0]
   filtered_docs = [
-      all_chunks[int(i)]['sentence_chunk'] for i in indices
+      all_chunks[int(i)]['text'] for i in indices
   ]
 
   pairs = [(user_query, doc) for doc in filtered_docs]
