@@ -8,6 +8,9 @@ import os
 def pipeline():
     print("APP STARTED")
     # Main variables
+    # TODO: move the embedding methods to embeddings.py
+    # This part must be clean and directly starts with the retrieval-augmented generation pipeline
+    # If index file does not exist ask the users if they want to embedd their data
     embedding_model_name = "./rag_core/models/embedders/BAAI/bge-large-en-v1.5"
     folder_path = "./rag_core/data"  # Update this path as needed
     pdf_list = get_list_of_available_pdfs(folder_path)
