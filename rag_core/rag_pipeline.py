@@ -9,8 +9,15 @@ import os
 def pipeline():
     print("APP STARTED")
     # Main variables
-    """TODO: avoid saving large chunks metadata in json and move each array
-    of metadata into the chunk itself."""
+    """
+    TODO: 1. Make the paths configurable via a config file or command line arguments
+          2. Add error handling for file operations and user inputs
+          3. Modularize the code further if needed
+          4. Add logging instead of print statements for better traceability
+          5. Switch retrieving to read the chunk_id from the metadata json instead of all_chunks
+          6. Add AI Judge or RAG evaluation pipeline
+          7. Save evaluation results to a file or local database
+    """
     
     # TODO: make the model name used all across and when changed only change in one place
     embedding_model_name = "./rag_core/models/embedders/BAAI/bge-large-en-v1.5"
