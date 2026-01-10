@@ -60,9 +60,6 @@ def open_and_read_pdf(pdf_list: list, json_path: str) -> list[dict]:
       'trapped': doc.metadata.get('trapped'),
       'encryption': doc.metadata.get('encryption')
       })
-
-    with open(json_path + '/pdf_pages.json', 'w') as f:
-      json.dump(pdf_pages, f)
   return pdf_pages
 
 def pdf_stats(content:list) -> pd.DataFrame:

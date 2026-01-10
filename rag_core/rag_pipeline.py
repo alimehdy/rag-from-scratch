@@ -1,7 +1,7 @@
 import json
 # from app.config import hf_token
 # from app.loader import get_list_of_available_pdfs, open_and_read_pdf
-# from app.chunker import text_chunking, read_json_file
+from app.chunker import read_json_file
 # from app.embeddings import embed_chunks, save_to_faiss
 from app.retriever import search_docs, apply_reranking, display_page
 from app.llm import build_llm_prompt, call_llm
@@ -15,10 +15,9 @@ def pipeline():
     # TODO: make the model name used all across and when changed only change in one place
     embedding_model_name = "./rag_core/models/embedders/BAAI/bge-large-en-v1.5"
     folder_path = "./rag_core/data"  # Update this path as needed
-    json_chunks = "./rag_core/embeddings/pdf_pages.json"  # Update this path as needed
-    all_chunks = []
-    with open(json_chunks, "r") as f:
-        all_chunks = json.load(f)
+    json_chunks = "./rag_core/embeddings/chunks_metadata.json"  # Update this path as needed
+    all_chunks = read_json_file(json_chunks)
+
     user_query = input("Enter your query: ")
     print(f"You entered: {user_query}")
     results = search_docs(user_query, "./rag_core/embeddings/embeddings.index", embedding_model_name, k=10, distance_threshold=0.75)
@@ -34,7 +33,7 @@ def pipeline():
     print("Building LLM prompt...")
     prompt = build_llm_prompt(reranked_results, all_chunks, user_query)
     print("Sending prompt to LLM...")
-    response = call_llm(prompt)
+    response = call_llm(prompt, model="qwen2.5:3b")
     print("LLM Response:")
     print(response)
     # print("Displaying top result page...")

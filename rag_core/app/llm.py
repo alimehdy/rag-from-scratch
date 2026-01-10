@@ -39,7 +39,7 @@ def build_llm_prompt(reranked_chunks, all_chunks, user_query):
 
   return prompt
 
-def call_llm(user_prompt:str, model:str="phi3") -> str:
+def call_llm(user_prompt:str, model:str) -> str:
     system_prompt = f"""
     You are a knowledgeable assistant.
     Use ONLY the information provided in the sources below to answer the question.

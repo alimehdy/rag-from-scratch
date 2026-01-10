@@ -37,7 +37,7 @@ def apply_reranking(filtered_indices, all_chunks, user_query):
   # Get retrieved docs from all_chunks
   indices = filtered_indices[0]
   filtered_docs = [
-      all_chunks[int(i)]['text'] for i in indices
+      all_chunks[int(i)]['sentence_chunk'] for i in indices
   ]
 
   pairs = [(user_query, doc) for doc in filtered_docs]
