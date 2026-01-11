@@ -1,12 +1,10 @@
 
 import faiss
-
 from sentence_transformers import SentenceTransformer
-from transformers import AutoTokenizer
-
 from FlagEmbedding import FlagReranker
 import numpy as np
 import pymupdf
+from config.rag_settings import reranking_model_name, local_files_only
 
 def search_docs(query: str, faiss_indexes, embedding_model_name, k:int=10, distance_threshold:float=0.75):
   # Read indexex
@@ -31,9 +29,9 @@ def search_docs(query: str, faiss_indexes, embedding_model_name, k:int=10, dista
 
 
 def apply_reranking(filtered_indices, all_chunks, user_query):
-  reranker = FlagReranker("./rag_core/models/rerankers/BAAI/bge-reranker-v2-gemma", 
+  reranker = FlagReranker(reranking_model_name, 
                                           use_fp16=True,
-                                          local_files_only=True)
+                                          local_files_only=local_files_only)
   # Get retrieved docs from all_chunks
   indices = filtered_indices[0]
   filtered_docs = [

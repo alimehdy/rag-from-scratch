@@ -1,11 +1,16 @@
-import json
-# from app.config import hf_token
-# from app.loader import get_list_of_available_pdfs, open_and_read_pdf
-from app.chunker import read_json_file
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
+from src.chunker import read_json_file
 # from app.embeddings import embed_chunks, save_to_faiss
-from app.retriever import search_docs, apply_reranking, display_page
-from app.llm import build_llm_prompt, call_llm
-import os
+from src.retriever import search_docs, apply_reranking, display_page
+from src.llm import build_llm_prompt, call_llm
+from config.rag_settings import (embedding_model_name, json_chunks,
+                                 embeddings, llm_model_name, top_k_retrieval,
+                                 distance_threshold)
 def pipeline():
     print("APP STARTED")
     # Main variables
@@ -19,15 +24,11 @@ def pipeline():
           7. Save evaluation results to a file or local database
     """
     
-    # TODO: make the model name used all across and when changed only change in one place
-    embedding_model_name = "./rag_core/models/embedders/BAAI/bge-large-en-v1.5"
-    folder_path = "./rag_core/data"  # Update this path as needed
-    json_chunks = "./rag_core/embeddings/chunks_metadata.json"  # Update this path as needed
     all_chunks = read_json_file(json_chunks)
 
     user_query = input("Enter your query: ")
     print(f"You entered: {user_query}")
-    results = search_docs(user_query, "./rag_core/embeddings/embeddings.index", embedding_model_name, k=10, distance_threshold=0.75)
+    results = search_docs(user_query, embeddings, embedding_model_name, k=top_k_retrieval, distance_threshold=distance_threshold)
     
     # Get filtered indices
     print("Filtered Indices:")
@@ -40,7 +41,7 @@ def pipeline():
     print("Building LLM prompt...")
     prompt = build_llm_prompt(reranked_results, all_chunks, user_query)
     print("Sending prompt to LLM...")
-    response = call_llm(prompt, model="qwen2.5:3b")
+    response = call_llm(prompt, model=llm_model_name)
     print("LLM Response:")
     print(response)
     # print("Displaying top result page...")

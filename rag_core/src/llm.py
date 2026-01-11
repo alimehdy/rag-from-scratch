@@ -1,5 +1,5 @@
 from ollama import chat
-
+from config.rag_settings import system_prompt, temperature, max_tokens, llm_streaming
 
 def build_llm_prompt(reranked_chunks, all_chunks, user_query):
   context_blocks = []
@@ -40,14 +40,7 @@ def build_llm_prompt(reranked_chunks, all_chunks, user_query):
   return prompt
 
 def call_llm(user_prompt:str, model:str) -> str:
-    system_prompt = f"""
-    You are a knowledgeable assistant.
-    Use ONLY the information provided in the sources below to answer the question.
-    If the answer cannot be found in the sources, say "I don't know".
-    When answering:
-    - It is essesntial that you cite the source number(s) you used, including title (file name) and page number.
-    - Do NOT add information not present in the sources.
-    """
+    
     response = chat(
         model=model,
         messages = [
@@ -55,9 +48,9 @@ def call_llm(user_prompt:str, model:str) -> str:
             {"role": "user", "content": user_prompt}
         ],
         options = {
-            "stream": False,
-            "temperature":0.7,
-            "max_tokens":1000
+            "stream": llm_streaming,
+            "temperature": temperature,
+            "max_tokens": max_tokens
         },        
         
     )

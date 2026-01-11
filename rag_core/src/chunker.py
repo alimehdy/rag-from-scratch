@@ -1,23 +1,19 @@
-"""
-That can be done using two ways:
-1. Splitting on ". "
-2. Using a library (spaCy, nltk, etc.)
-3. Using recusrsive chunking
-"""
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from tqdm import tqdm
 import json
+
+from config.rag_settings import MARKDOWN_SEPARATORS, chunk_size, chunk_overlap, metadata_path, metadata_file_name
 def text_chunking(content: list) -> list:
   # saving the original list
-  metadata_path = "./rag_core/embeddings/"
   all_chunks = []
-  # Separators
-  MARKDOWN_SEPARATORS = [
-      "\n#{1,6} ", "```\n", "\n\\*\\*\\*+\n", "\n---+\n", "\n___+\n", "\n\n", "\n", ". ", " ", ""
-  ]
-
   text_splitter = RecursiveCharacterTextSplitter(
-      separators=MARKDOWN_SEPARATORS, chunk_size=1000, chunk_overlap=50,
+      separators=MARKDOWN_SEPARATORS, chunk_size=chunk_size, chunk_overlap=chunk_overlap,
       add_start_index=True, strip_whitespace=True
   )
 
@@ -53,7 +49,7 @@ def text_chunking(content: list) -> list:
     # We can filter the results and remove small chunks
     # Append to global list
     all_chunks.extend(chunk_dicts)
-    with open(metadata_path + '/chunks_metadata.json', 'w') as f:
+    with open(metadata_path + metadata_file_name, 'w') as f:
         json.dump(all_chunks, f)
   return all_chunks
 

@@ -1,17 +1,21 @@
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
 from sentence_transformers import SentenceTransformer
 from FlagEmbedding import FlagReranker
-
+from config.rag_settings import embedder_path, reranker_path
 def download_model(model_name:str):
-    # Download the model from Hugging Face
-    # model = SentenceTransformer("BAAI/bge-large-en-v1.5")
     model = SentenceTransformer(model_name_or_path=model_name)
     # Save locally
-    model.save(f"./models/embedders/{model_name}")
+    model.save(f"{embedder_path}{model_name}")
 
 def download_reranker_model(model_name:str):
     reranker = FlagReranker(model_name)
-    reranker.model.save_pretrained(f"./models/rerankers/{model_name}")
-    reranker.tokenizer.save_pretrained(f"./models/rerankers/{model_name}")
+    reranker.model.save_pretrained(f"{reranker_path}{model_name}")
+    reranker.tokenizer.save_pretrained(f"{reranker_path}{model_name}")
 
 if __name__ == "__main__":
     # download_model("BAAI/bge-large-en-v1.5")

@@ -1,4 +1,9 @@
-import os
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
 from chunker import text_chunking
 from loader import get_list_of_available_pdfs, open_and_read_pdf
 from sentence_transformers import SentenceTransformer
@@ -8,11 +13,13 @@ from tqdm import tqdm
 from typing import Optional
 import faiss
 import numpy as np
+from config.rag_settings import (embedding_model_name, folder_path, 
+     metadata_json_path, index_path, distance_metric, embeddings_file_name)
 
 def embed_chunks(chunks: list, embedding_model, metadata_json_path, hf_token:Optional[str]=None):
   # Use this only if we're getting the embedder online
   # login(token=hf_token)
-  embedding_model = SentenceTransformer(model_name_or_path = embedding_model)
+  embedding_model = SentenceTransformer(model_name_or_path = embedding_model_name)
   embedding_model.to("cpu")
   print(f"Number of chunks to embed: {len(chunks)}")
   i = 1
@@ -57,13 +64,10 @@ def save_to_faiss(embeddings: list,
     }
 
 if __name__ == "__main__":
-  json_path = "./rag_core/embeddings/" # Update this path as needed
-  index_path = "./rag_core/embeddings/" # Update this path as needed
-  embedding_model_name = "./rag_core/models/embedders/BAAI/bge-large-en-v1.5" # Update this path as needed
-  folder_path = "./rag_core/data"  # Update this path as needed
+  
   pdf_list = get_list_of_available_pdfs(folder_path)
   print(f"Found {len(pdf_list)} PDF files.")
-  pdf_pages = open_and_read_pdf(pdf_list, json_path)
+  pdf_pages = open_and_read_pdf(pdf_list, metadata_json_path)
   
   print(f"Extracted {len(pdf_pages)} pages from the PDFs.")
   # print(pdf_pages[0])
@@ -71,12 +75,12 @@ if __name__ == "__main__":
   all_chunks = text_chunking(pdf_pages)
   print(f"Generated {len(all_chunks)} text chunks from the pages.")
   print("Embedding process started...")
-  res = embed_chunks(all_chunks, embedding_model_name, metadata_json_path=json_path)
+  res = embed_chunks(all_chunks, embedding_model_name, metadata_json_path=metadata_json_path)
   print("Saving embeddings to FAISS index...")
   faiss_info = save_to_faiss(
       embeddings=[item["embedding"] for item in res],
       embed_index_path=index_path,
       save_to_local=True,
-      distance_metric='L2',
-      file_name="embeddings.index"
+      distance_metric=distance_metric,
+      file_name=embeddings_file_name
   )

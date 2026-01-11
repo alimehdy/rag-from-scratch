@@ -1,10 +1,8 @@
-import json
 import os
 import re
 import pymupdf
 import pandas as pd
 from tqdm import tqdm
-
 # Reading locally
 def get_list_of_available_pdfs(folder_path, from_drive:bool=False) -> list:
   if '/content' not in folder_path and not from_drive:
