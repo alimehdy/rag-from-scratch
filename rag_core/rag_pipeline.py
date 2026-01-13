@@ -4,14 +4,14 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
-from src.chunker import read_json_file
+from rag_core.src.chunker import read_json_file
 # from app.embeddings import embed_chunks, save_to_faiss
-from src.retriever import search_docs, apply_reranking, display_page
-from src.llm import build_llm_prompt, call_llm
+from rag_core.src.retriever import search_docs, apply_reranking, display_page
+from rag_core.src.llm import build_llm_prompt, call_llm
 from config.rag_settings import (embedding_model_name, json_chunks,
                                  embeddings, llm_model_name, top_k_retrieval,
                                  distance_threshold)
-def pipeline():
+def pipeline(user_query):
     print("APP STARTED")
     # Main variables
     """
@@ -26,7 +26,7 @@ def pipeline():
     
     all_chunks = read_json_file(json_chunks)
 
-    user_query = input("Enter your query: ")
+    # user_query = input("Enter your query: ")
     print(f"You entered: {user_query}")
     results = search_docs(user_query, embeddings, embedding_model_name, k=top_k_retrieval, distance_threshold=distance_threshold)
     
@@ -44,6 +44,7 @@ def pipeline():
     response = call_llm(prompt, model=llm_model_name)
     print("LLM Response:")
     print(response)
+    return response
     # print("Displaying top result page...")
     # display_page(reranked_indices, all_chunks)
 
