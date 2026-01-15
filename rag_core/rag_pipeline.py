@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-
+import time
 ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
@@ -11,7 +11,8 @@ from rag_core.src.llm import build_llm_prompt, call_llm
 from config.rag_settings import (embedding_model_name, json_chunks,
                                  embeddings, llm_model_name, top_k_retrieval,
                                  distance_threshold)
-def pipeline(user_query):
+def pipeline(user_query, llm_model):
+    start_time = time.perf_counter()
     print("APP STARTED")
     # Main variables
     """
@@ -22,6 +23,7 @@ def pipeline(user_query):
           5. Switch retrieving to read the chunk_id from the metadata json instead of all_chunks
           6. Add AI Judge or RAG evaluation pipeline
           7. Save evaluation results to a file or local database
+          8. Load model in streamlit app and avoid reloading on every query
     """
     
     all_chunks = read_json_file(json_chunks)
@@ -41,10 +43,16 @@ def pipeline(user_query):
     print("Building LLM prompt...")
     prompt = build_llm_prompt(reranked_results, all_chunks, user_query)
     print("Sending prompt to LLM...")
-    response = call_llm(prompt, model=llm_model_name)
+    response = call_llm(prompt, model=llm_model)
     print("LLM Response:")
     print(response)
-    return response
+    # TODO: add to offline storage or database
+    # add separate timing logs for each step
+    execution_time = time.perf_counter() - start_time
+    # try:
+    return (response, execution_time)
+    # except Exception as e:
+    # return f"⚠️ Error returning response and execution time: {e}"
     # print("Displaying top result page...")
     # display_page(reranked_indices, all_chunks)
 

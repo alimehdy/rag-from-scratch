@@ -1,6 +1,24 @@
+import sys
+from pathlib import Path
+from ollama import chat
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
+    sys.path.append(str(ROOT_DIR / "rag_core"))
 import streamlit as st
 from rag_core.rag_pipeline import pipeline
+from config.rag_settings import llm_model_name
 
+@st.cache_resource(show_spinner="Loading LLM...")
+def load_llm(model_name: str):
+    # Warm the model once
+    print("🧠 Loading LLM model into memory...")
+    chat(
+        model=model_name,
+        messages=[{"role": "system", "content": "Warmup"}],
+    )
+    return model_name
+llm_model = load_llm(llm_model_name)  # Example model name
 
 # from rag_core.rag_pipeline import pipeline
 # -------------------------------
@@ -40,11 +58,15 @@ with selected_page[0]:
     resp = ""
     if st.button("Send"):
         if user_input.strip():
+            st.write(f"You entered: {user_input}")
+            # Append user message to chat history
             st.session_state.chat_history.append({"role": "user", "text": user_input})
-            with st.spinner("Processing your query..."): 
-                resp = pipeline(user_input)
+            with st.spinner("Processing your query..."):
+                resp, exec_time = pipeline(user_input, llm_model)
+            st.write(f"**Assistant:** {resp}")
+            st.caption(f"⏱ {exec_time:.2f} seconds") 
             # Placeholder for AI response
-            st.session_state.chat_history.append({"role": "assistant", "text": f"Echo: {resp}"})
+            # st.session_state.chat_history.append({"role": "assistant", "text": f"Echo: {resp}"})
             # st.experimental_rerun()
 
     # Display chat history

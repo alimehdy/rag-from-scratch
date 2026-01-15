@@ -55,10 +55,10 @@ def call_llm(user_prompt:str, model:str) -> str:
         
     )
     try: 
-      return response["choices"][0]["message"]["content"] 
+      return response["message"]["content"] 
     except Exception as e: 
       print("⚠️ Unexpected response format:", response) 
-      return None
+      return f"⚠️ Unexpected response format: {response}"
 
 # if __name__ == "__main__":
 #     user_prompt = input("Enter your prompt: ")
