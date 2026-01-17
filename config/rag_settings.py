@@ -49,3 +49,12 @@ distance_threshold = 0.75
 reranking_model_name = "./rag_core/models/rerankers/BAAI/bge-reranker-v2-gemma"  # Update this with your desired reranking model name
 local_files_only = True
 reranker_path = "./rag_core/models/rerankers/"
+
+
+# Milvus settings
+milvus_host = "localhost"
+milvus_port = "19530"
+milvus_collection_name = "rag_collection"
+milvus_distance_metric = "L2" # Options: 'L2', 'IP'
+milvus_client_uri = "./milvus_db.db"
+milvus_embedding_dim = 1024  # Update this based on the embedding model used

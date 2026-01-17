@@ -15,3 +15,5 @@ torch
 python-dotenv
 ollama
 streamlit
+pymilvus
+pymilvus[milvus_lite]
