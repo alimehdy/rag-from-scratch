@@ -7,6 +7,7 @@
 /rag_core/media/*
 /rag_core/models/embedders/*
 /rag_core/models/rerankers/*
+/rag_core/milvus/volumes/*
 *.json
 *.index
 *.faiss

@@ -52,9 +52,10 @@ reranker_path = "./rag_core/models/rerankers/"
 
 
 # Milvus settings
-milvus_host = "localhost"
+milvus_host = "127.0.0.1" # or "localhost"
 milvus_port = "19530"
 milvus_collection_name = "rag_collection"
 milvus_distance_metric = "L2" # Options: 'L2', 'IP'
 milvus_client_uri = "./milvus_db.db"
 milvus_embedding_dim = 1024  # Update this based on the embedding model used
+nlist = 128 # It should be sqrt of the number of embeddings, but to save memory we set it lower for now.

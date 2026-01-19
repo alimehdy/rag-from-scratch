@@ -10,9 +10,9 @@ from chunker import text_chunking
 from loader import get_list_of_available_pdfs, open_and_read_pdf
 from sentence_transformers import SentenceTransformer
 # from huggingface_hub import login
-from pymilvus import (client, Collection, 
+from pymilvus import (client, Collection, connections,
                       FieldSchema, CollectionSchema, DataType, 
-                      MilvusClient)
+                      utility)
 from tqdm import tqdm
 from typing import Optional
 import faiss
@@ -20,7 +20,7 @@ import numpy as np
 from config.rag_settings import (embedding_model_name, folder_path, 
      metadata_json_path, index_path, distance_metric, embeddings_file_name,
      milvus_host, milvus_port, milvus_collection_name, 
-     milvus_embedding_dim, milvus_distance_metric, milvus_client_uri)
+     milvus_embedding_dim, milvus_distance_metric, milvus_client_uri, nlist)
 
 
 
@@ -40,19 +40,29 @@ def embed_chunks(chunks: list, embedding_model, metadata_json_path, hf_token:Opt
   #   json.dump(chunks_array, f)
   return chunks
 
+def connect_to_milvus(host:str=milvus_host, port:str=milvus_port):
+  try:
+    connections.connect("default", host=host, port=port)
+    return True
+  except Exception as e:
+    print(f"Error connecting to Milvus: {e}")
+    return False
+
 def save_to_milvus(embeddings: list,
                   collection_name:str=milvus_collection_name,
-                  chunks_metadata: list=[],
+                  chunks_metadata: list | None=None,
                   host:str=milvus_host,
                   port:str=milvus_port,
                   distance_metric:str=milvus_distance_metric,
-                  dimension:int=milvus_embedding_dim
+                  dimension:int=milvus_embedding_dim,
+                  nlist:int=nlist
                   ):
-  # Milvus client
-  client = MilvusClient(uri=milvus_client_uri)
-  """or connections.connect() if we want to connect to a server 
-  (installing milvus server using docker is needed)
-  """
+  # Fresh list each time
+  if chunks_metadata is None:
+    chunks_metadata = []
+  # To ensure embeddings and metadata align correctly in term of length and order
+  assert len(embeddings) == len(chunks_metadata)
+
   # create schema
   milvus_schema = CollectionSchema(fields=[
       FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
@@ -60,7 +70,7 @@ def save_to_milvus(embeddings: list,
       FieldSchema(name="chunk_metadata", dtype=DataType.JSON)
   ], description="RAG Embeddings Collection")
   # Create collection
-  if not Collection.exists(collection_name):
+  if not utility.has_collection(collection_name):
       print(f"Collection {collection_name} does not exists. Creating...")
       collection = Collection(name=collection_name, schema=milvus_schema)
   else:
@@ -68,7 +78,7 @@ def save_to_milvus(embeddings: list,
       collection = Collection(name=collection_name, schema=milvus_schema)
   insert_data = [
       embeddings,
-      [chunk['metadata'] for chunk in chunks_metadata]
+      [chunk for chunk in chunks_metadata]
   ]
   # Insert data into collection
   collection.insert(insert_data)
@@ -76,7 +86,7 @@ def save_to_milvus(embeddings: list,
   index_params = {
       "index_type": "IVF_FLAT",
       "metric_type": distance_metric,
-      "params": {"nlist": dimension}
+      "params": {"nlist": nlist}
   }
   collection.create_index(field_name="embedding", index_params=index_params)
 
@@ -122,24 +132,28 @@ def save_to_faiss(embeddings: list,
     }
 
 if __name__ == "__main__":
-  
-  pdf_list = get_list_of_available_pdfs(folder_path)
-  print(f"Found {len(pdf_list)} PDF files.")
-  pdf_pages = open_and_read_pdf(pdf_list, metadata_json_path)
-  
-  print(f"Extracted {len(pdf_pages)} pages from the PDFs.")
-  # print(pdf_pages[0])
-  print("Chunking process started...")
-  all_chunks = text_chunking(pdf_pages)
-  print(f"Generated {len(all_chunks)} text chunks from the pages.")
-  print("Embedding process started...")
-  res = embed_chunks(all_chunks, embedding_model_name, metadata_json_path=metadata_json_path)
-  
-  # Saving to Milvus
-  print("Saving embeddings to Milvus...")
-  milvus_info = save_to_milvus(embeddings=[item["embedding"] for item in res],
-                              chunks_metadata=all_chunks)
-  print("Milvus save info:", milvus_info)
+  if connect_to_milvus():
+    print("Connected to Milvus successfully.")
+    pdf_list = get_list_of_available_pdfs(folder_path)
+    print(f"Found {len(pdf_list)} PDF files.")
+    pdf_pages = open_and_read_pdf(pdf_list, metadata_json_path)
+    
+    print(f"Extracted {len(pdf_pages)} pages from the PDFs.")
+    # print(pdf_pages[0])
+    print("Chunking process started...")
+    all_chunks = text_chunking(pdf_pages)
+    print(f"Generated {len(all_chunks)} text chunks from the pages.")
+    print("Embedding process started...")
+    res = embed_chunks(all_chunks, embedding_model_name, metadata_json_path=metadata_json_path)
+    
+    # Saving to Milvus
+    print("Saving embeddings to Milvus...")
+    print(all_chunks[0])
+    milvus_info = save_to_milvus(embeddings=[item["embedding"] for item in res],
+                                chunks_metadata=all_chunks)
+    print("Milvus save info:", milvus_info)
+  else:
+    print("Failed to connect to Milvus.")
   # print("Saving embeddings to FAISS index...")
   # faiss_info = save_to_faiss(
   #     embeddings=[item["embedding"] for item in res],
