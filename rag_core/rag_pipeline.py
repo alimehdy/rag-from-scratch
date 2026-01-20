@@ -6,7 +6,8 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 from rag_core.src.chunker import read_json_file
 # from app.embeddings import embed_chunks, save_to_faiss
-from rag_core.src.retriever import search_docs, apply_reranking, display_page
+from rag_core.src.retriever import search_docs_faiss, display_page, search_docs_milvus
+from rag_core.src.reranker import apply_reranking
 from rag_core.src.llm import build_llm_prompt, call_llm
 from config.rag_settings import (embedding_model_name, json_chunks,
                                  embeddings, llm_model_name, top_k_retrieval,
@@ -26,20 +27,23 @@ def pipeline(user_query, llm_model):
           8. Load model in streamlit app and avoid reloading on every query
     """
     
-    all_chunks = read_json_file(json_chunks)
+    # all_chunks = read_json_file(json_chunks)
 
     # user_query = input("Enter your query: ")
     print(f"You entered: {user_query}")
-    results = search_docs(user_query, embeddings, embedding_model_name, k=top_k_retrieval, distance_threshold=distance_threshold)
-    
+    results = search_docs_milvus(user_query)
+    # results = search_docs_faiss(user_query, embeddings, embedding_model_name, k=top_k_retrieval, distance_threshold=distance_threshold)
+    print(results)
+    # return (results, None)
     # Get filtered indices
-    print("Filtered Indices:")
-    filtered_indices = results[3]
-    print("filtered_indices:", filtered_indices)
+    # print("Filtered Indices:")
+    # filtered_indices = results[3]
+    # print("filtered_indices:", filtered_indices)
     print("Reranking started...")
-    reranked_results = apply_reranking(filtered_indices, all_chunks, user_query)
+    reranked_results = apply_reranking(results, user_query)
     reranked_indices = [[idx[0] for idx in reranked_results]]
     print("reranked_results:", reranked_indices)
+    return (reranked_indices, None)
     print("Building LLM prompt...")
     prompt = build_llm_prompt(reranked_results, all_chunks, user_query)
     print("Sending prompt to LLM...")

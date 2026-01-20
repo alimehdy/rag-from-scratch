@@ -29,7 +29,7 @@ def text_chunking(content: list) -> list:
             "title": item["title"],
             "author": item["author"],
             "subject": item["subject"],
-            "creatror": item["creator"],
+            "creator": item["creator"],
             "text_path": item["text_path"],
             "text_file_name": item["text_file_name"],
             "creationDate": item["creationDate"],

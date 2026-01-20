@@ -1,16 +1,16 @@
-import sys
-from pathlib import Path
-from xmlrpc import client
+# import sys
+# from pathlib import Path
+# from xmlrpc import client
 
-ROOT_DIR = Path(__file__).resolve().parents[2]
-if str(ROOT_DIR) not in sys.path:
-    sys.path.append(str(ROOT_DIR))
+# ROOT_DIR = Path(__file__).resolve().parents[2]
+# if str(ROOT_DIR) not in sys.path:
+#     sys.path.append(str(ROOT_DIR))
 
-from chunker import text_chunking
-from loader import get_list_of_available_pdfs, open_and_read_pdf
+from src.chunker import text_chunking
+from src.loader import get_list_of_available_pdfs, open_and_read_pdf
 from sentence_transformers import SentenceTransformer
 # from huggingface_hub import login
-from pymilvus import (client, Collection, connections,
+from pymilvus import (Collection, connections,
                       FieldSchema, CollectionSchema, DataType, 
                       utility)
 from tqdm import tqdm
@@ -35,7 +35,7 @@ def embed_chunks(chunks: list, embedding_model, metadata_json_path, hf_token:Opt
     item["embedding"] = embedding_model.encode(item["sentence_chunk"])
     i = i-1
   # save to json to recover instead of re-embedding
-  chunks_array = [x['embedding'].tolist() for x in chunks]
+  # chunks_array = [x['embedding'].tolist() for x in chunks]
   # with open(metadata_json_path + '/' + 'embedded_chunks.json', 'w') as f:
   #   json.dump(chunks_array, f)
   return chunks

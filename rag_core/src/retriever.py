@@ -1,12 +1,53 @@
 
 import faiss
 from sentence_transformers import SentenceTransformer
-from FlagEmbedding import FlagReranker
 import numpy as np
 import pymupdf
-from config.rag_settings import reranking_model_name, local_files_only
+from config.rag_settings import (embedding_model_name, top_k_retrieval,
+                                 milvus_collection_name)
+from pymilvus import utility, Collection
+from src.embeddings import connect_to_milvus
+def search_docs_milvus(query: str, milvus_collection_name:str=milvus_collection_name,
+                       embedding_model_name:str=embedding_model_name, k:int=top_k_retrieval, distance_threshold:float=0.75):
+  # Connect to Milvus
+  if connect_to_milvus():
+    if utility.has_collection(milvus_collection_name):
+      collection = Collection(milvus_collection_name)
+      embedding_model = SentenceTransformer(embedding_model_name)
+      embedded_query = embedding_model.encode(query)
+      query_vector = [embedded_query.astype('float32').tolist()]
+      search_params = {
+        "metric_type": "L2",
+        "params": {"nprobe": 10}
+      }
+      results = collection.search(
+        data=query_vector,
+        anns_field="embedding",
+        param=search_params,
+        limit=k,
+        output_fields=["chunk_metadata"]
+      )
 
-def search_docs(query: str, faiss_indexes, embedding_model_name, k:int=10, distance_threshold:float=0.75):
+      filtered_results = []
+      for hit in results[0]:
+        if hit.distance <= distance_threshold:
+          filtered_results.append({
+              "id": hit.id,
+              "distance": hit.distance,
+              "sentence_chunk": hit.entity.get("chunk_metadata")["sentence_chunk"],
+              "text_file_name": hit.entity.get("chunk_metadata")["text_file_name"],
+              "text_path": hit.entity.get("chunk_metadata")["text_path"],
+              "title": hit.entity.get("chunk_metadata")["title"],
+              "page": hit.entity.get("chunk_metadata")["page_number"]
+          })
+      return filtered_results
+    else:
+      raise ValueError(f"Collection {milvus_collection_name} does not exist in Milvus.")
+  else: 
+    raise ConnectionError("Could not connect to Milvus.")
+  
+
+def search_docs_faiss(query: str, faiss_indexes, embedding_model_name, k:int=10, distance_threshold:float=0.75):
   # Read indexex
   index = faiss.read_index(faiss_indexes)
 
@@ -27,27 +68,6 @@ def search_docs(query: str, faiss_indexes, embedding_model_name, k:int=10, dista
   return (query, distances, data_indices, filtered_indices, filtered_scores)
 
 
-
-def apply_reranking(filtered_indices, all_chunks, user_query):
-  reranker = FlagReranker(reranking_model_name, 
-                                          use_fp16=True,
-                                          local_files_only=local_files_only)
-  # Get retrieved docs from all_chunks
-  indices = filtered_indices[0]
-  filtered_docs = [
-      all_chunks[int(i)]['sentence_chunk'] for i in indices
-  ]
-
-  pairs = [(user_query, doc) for doc in filtered_docs]
-  scores = reranker.compute_score(pairs, normalize=True)
-  print('\nScores: ', scores)
-  reranked_docs = sorted(
-      zip(indices, filtered_docs, scores),
-      key=lambda x: x[2],
-      reverse=True
-  )
-  # print('\nReranked Docs: ',reranked_docs)
-  return reranked_docs
 
 
 def display_page(data_indices, chunks):
