@@ -49,7 +49,7 @@ distance_threshold = 0.75
 reranking_model_name = "./rag_core/models/rerankers/BAAI/bge-reranker-v2-gemma"  # Update this with your desired reranking model name
 local_files_only = True
 reranker_path = "./rag_core/models/rerankers/"
-
+reranker_max_tokens = 256
 
 # Milvus settings
 milvus_host = "127.0.0.1" # or "localhost"

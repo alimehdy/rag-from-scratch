@@ -9,17 +9,6 @@ import streamlit as st
 from rag_core.rag_pipeline import pipeline
 from config.rag_settings import llm_model_name
 
-@st.cache_resource(show_spinner="Loading LLM...")
-def load_llm(model_name: str):
-    # Warm the model once
-    print("🧠 Loading LLM model into memory...")
-    chat(
-        model=model_name,
-        messages=[{"role": "system", "content": "Warmup"}],
-    )
-    return model_name
-llm_model = load_llm(llm_model_name)  # Example model name
-
 # from rag_core.rag_pipeline import pipeline
 # -------------------------------
 # Page configuration
@@ -33,7 +22,7 @@ st.set_page_config(
 # -------------------------------
 # Sidebar (PDF retrieval placeholder)
 # -------------------------------
-st.sidebar.title("📂 PDF Retrieval")
+st.sidebar.title("📂 Relevant PDFs")
 st.sidebar.info("Later, you can add PDF search results here based on RAG pipeline.")
 
 # -------------------------------
@@ -47,35 +36,51 @@ selected_page = st.tabs(pages)
 # -------------------------------
 with selected_page[0]:
     st.header("💬 Chat Interface")
-    # Initialize chat history in session state
+
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    # Input box
-    user_input = st.text_area(placeholder="Type your message:", label="")
+    with st.form("chat_form", clear_on_submit=True):
+        st.text_area(
+            key="user_input",
+            placeholder="Type your message:",
+            label="User Message",
+            label_visibility="collapsed"
+        )
+        submitted = st.form_submit_button("Send")
 
-    # Handle submission
-    resp = ""
-    if st.button("Send"):
+    if submitted:
+        user_input = st.session_state.user_input
+        st.write(f"Your query: {user_input}")
         if user_input.strip():
-            st.write(f"You entered: {user_input}")
-            # Append user message to chat history
-            st.session_state.chat_history.append({"role": "user", "text": user_input})
+            st.session_state.chat_history.append(
+                {"role": "user", "text": user_input}
+            )
+
             with st.spinner("Processing your query..."):
-                resp, exec_time = pipeline(user_input, llm_model)
+                resp, relevant_files, exec_time = pipeline(user_input)
+            st.write(relevant_files)
             st.write(f"**Assistant:** {resp}")
-            st.caption(f"⏱ {exec_time:.2f} seconds") 
-            # Placeholder for AI response
-            # st.session_state.chat_history.append({"role": "assistant", "text": f"Echo: {resp}"})
-            # st.experimental_rerun()
+            for i, doc in enumerate(relevant_files):
+                pdf_path = Path(doc["text_path"])
 
-    # Display chat history
+                if st.sidebar.button(doc["title"], key=f"pdf_{i}"):
+                    with open(pdf_path, "rb") as f:
+                        st.sidebar.download_button(
+                            label="Download PDF",
+                            data=f,
+                            file_name=pdf_path.name,
+                            mime="application/pdf",
+                            key=f"download_{i}"
+                        )
+            st.caption(f"⏱ {exec_time:.2f} seconds")
+
     for msg in st.session_state.chat_history:
-        if msg["role"] == "user":
-            st.markdown(f"**You:** {msg['text']}")
-        else:
-            st.markdown(f"**Assistant:** {msg['text']}")
-
+        st.markdown(
+            f"**You:** {msg['text']}"
+            if msg["role"] == "user"
+            else f"**Assistant:** {msg['text']}"
+        )
 # -------------------------------
 # Embeddings Page
 # -------------------------------

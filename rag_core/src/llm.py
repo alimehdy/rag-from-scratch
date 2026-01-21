@@ -1,28 +1,39 @@
 from ollama import chat
-from config.rag_settings import system_prompt, temperature, max_tokens, llm_streaming
+from config.rag_settings import system_prompt, temperature, max_tokens, llm_streaming, llm_model_name
+import streamlit as st
 
-def build_llm_prompt(reranked_chunks, all_chunks, user_query):
+@st.cache_resource(show_spinner="Loading LLM...")
+def load_llm(model_name: str):
+    # Warm the model once
+    print("🧠 Loading LLM model into memory...")
+    chat(
+        model=model_name,
+        messages=[{"role": "system", "content": "Warmup"}],
+    )
+    return model_name
+
+
+def build_llm_prompt(reranked_chunks, user_query):
   context_blocks = []
-  context_chunks = [chunk[1] for chunk in reranked_chunks]
-  context_chunks_indices = [chunk[0] for chunk in reranked_chunks]
-  context_chunks_metadata = [
-    {
-        "index": i,
-        "title": all_chunks[i].get("title"),
-        "file": all_chunks[i].get("text_file_name"),
-        "page": all_chunks[i].get("page_number"),
-        "chunk_content": all_chunks[i].get("sentence_chunk")
-    }
-    for i in context_chunks_indices
-  ]
+  # context_chunks_metadata = [
+  #   {
+  #       "index": i,
+  #       "title": reranked_chunks[i].get("title"),
+  #       "file": reranked_chunks[i].get("text_file_name"),
+  #       "page": reranked_chunks[i].get("page_number"),
+  #       "chunk_content": reranked_chunks[i].get("sentence_chunk")
+  #   }
+  #   for i in context_chunks_indices
+  # ]
 
-  for idx, item in enumerate(context_chunks_metadata):
+  for idx, item in enumerate(reranked_chunks):
     block = f"""
     Title: {item['title']}
-    File: {item['file']}
     Page: {item['page']}
+    File Path: {item['text_path']}
+    Rerank Score: {item['rerank_score']}
     Content:
-    {item['chunk_content']}
+    {item['sentence_chunk']}
     """
     context_blocks.append(block.strip())
 
@@ -39,10 +50,10 @@ def build_llm_prompt(reranked_chunks, all_chunks, user_query):
 
   return prompt
 
-def call_llm(user_prompt:str, model:str) -> str:
-    
+def call_llm(user_prompt:str) -> str:
+    llm_model = load_llm(llm_model_name)
     response = chat(
-        model=model,
+        model=llm_model,
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
