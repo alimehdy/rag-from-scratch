@@ -4,6 +4,7 @@
 /rag_core/__pycache__/*
 /rag_core/app/__pycache__/*
 /rag_core/embeddings/*
+/rag_core/data/*
 /rag_core/media/*
 /rag_core/models/embedders/*
 /rag_core/models/rerankers/*

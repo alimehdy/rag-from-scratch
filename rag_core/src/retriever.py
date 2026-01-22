@@ -6,7 +6,7 @@ import pymupdf
 from config.rag_settings import (embedding_model_name, top_k_retrieval,
                                  milvus_collection_name)
 from pymilvus import utility, Collection
-from src.embeddings import connect_to_milvus
+from rag_core.src.embeddings import connect_to_milvus
 def search_docs_milvus(query: str, milvus_collection_name:str=milvus_collection_name,
                        embedding_model_name:str=embedding_model_name, k:int=top_k_retrieval, distance_threshold:float=0.75):
   # Connect to Milvus

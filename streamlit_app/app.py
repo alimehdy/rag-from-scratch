@@ -1,15 +1,16 @@
-import sys
-from pathlib import Path
-from ollama import chat
-ROOT_DIR = Path(__file__).resolve().parents[1]
-if str(ROOT_DIR) not in sys.path:
-    sys.path.append(str(ROOT_DIR))
-    sys.path.append(str(ROOT_DIR / "rag_core"))
+# import sys
+# from pathlib import Path
+# from ollama import chat
+
+# ROOT_DIR = Path(__file__).resolve().parents[1]
+# if str(ROOT_DIR) not in sys.path:
+#     sys.path.append(str(ROOT_DIR))
+#     sys.path.append(str(ROOT_DIR / "rag_core"))
+
 import streamlit as st
 from rag_core.rag_pipeline import pipeline
 from config.rag_settings import llm_model_name
 
-# from rag_core.rag_pipeline import pipeline
 # -------------------------------
 # Page configuration
 # -------------------------------
@@ -20,22 +21,34 @@ st.set_page_config(
 )
 
 # -------------------------------
-# Sidebar (PDF retrieval placeholder)
+# Sidebar (Related documents)
 # -------------------------------
-st.sidebar.title("📂 Relevant PDFs")
-st.sidebar.info("Later, you can add PDF search results here based on RAG pipeline.")
+st.sidebar.title("📄 Sources Used")
+st.sidebar.info(
+    "Documents used to generate the answer will appear here.\n\n"
+    "This helps you understand where the information comes from."
+)
+st.toast("Thanks! Your feedback was saved 🙌", icon="✅")
 
 # -------------------------------
 # Top navigation pages
 # -------------------------------
-pages = ["Chat", "Embeddings", "Previous Search"]
+pages = ["Chat", "Knowledge Base", "Evaluation"]
 selected_page = st.tabs(pages)
 
 # -------------------------------
 # Chat Page
 # -------------------------------
 with selected_page[0]:
-    st.header("💬 Chat Interface")
+    st.header("💬 Ask Your Knowledge Base")
+    st.caption(
+        "Ask questions and get answers based only on your uploaded documents."
+    )
+
+    with st.expander("💡 Example questions you can ask"):
+        st.markdown("""
+        - What does the contract say about termination?  
+        """)
 
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
@@ -43,26 +56,35 @@ with selected_page[0]:
     with st.form("chat_form", clear_on_submit=True):
         st.text_area(
             key="user_input",
-            placeholder="Type your message:",
+            placeholder="Ask a question about your documents…",
             label="User Message",
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            height=120
         )
-        submitted = st.form_submit_button("Send")
+        submitted = st.form_submit_button("Ask")
 
     if submitted:
         user_input = st.session_state.user_input
-        st.write(f"Your query: {user_input}")
+        for msg in st.session_state.chat_history:
+            st.markdown(
+                f"**You:** {user_input}"
+            )
+
+
         if user_input.strip():
             st.session_state.chat_history.append(
                 {"role": "user", "text": user_input}
             )
 
-            with st.spinner("Processing your query..."):
+            with st.spinner("🤖 Looking through your documents…"):
                 resp, relevant_files, exec_time = pipeline(user_input)
-            
+
             if relevant_files:
-                # st.write(relevant_files)
-                st.write(f"**Assistant:** {resp}")
+                st.markdown("### 🤖 Answer")
+                st.write(resp)
+
+                st.sidebar.markdown("### 📎 Related Documents")
+
                 for idx, doc in enumerate(relevant_files):
                     pdf_path = Path(doc["text_path"])
 
@@ -71,45 +93,62 @@ with selected_page[0]:
 
                     label = doc["title"]
 
-                    # ⭐ Highlight the best source
                     if idx == 0:
                         label = f"⭐ Best Source — {label}"
 
                     with open(pdf_path, "rb") as f:
                         st.sidebar.download_button(
-                            label=label,                         # visible title
+                            label=label,
                             data=f,
-                            file_name=pdf_path.name,             # actual PDF file
+                            file_name=pdf_path.name,
                             mime="application/pdf",
                             key=f"pdf_download_{idx}"
                         )
+                    with st.expander("⭐ Evaluate this answer", expanded=True):
+                        rating = st.slider(
+                            "Helpfulness",
+                            min_value=1,
+                            max_value=5,
+                            value=3
+                        )
+
+                        feedback = st.text_area(
+                            "Optional feedback",
+                            placeholder="Tell us what could be better"
+                        )
+
+                        if st.button("Submit evaluation"):
+                            st.toast("Thanks! Your feedback was saved 🙌", icon="✅")
 
             else:
                 st.markdown("""
-                    <div style="text-align:center; color:gray;">
-                    <h4>🔍 No relevant data found</h4>
-                    <p>Try rephrasing your question or using different keywords.</p>
-                    </div>
-                    """, unsafe_allow_html=True)
+                <div style="text-align:center; color:gray;">
+                <h4>🔍 No matching information found</h4>
+                <p>Try rephrasing your question or using simpler keywords.</p>
+                </div>
+                """, unsafe_allow_html=True)
 
-            st.caption(f"⏱ {exec_time:.2f} seconds")
+            st.caption(f"⏱ Answer generated in {exec_time:.2f} seconds")
 
-    for msg in st.session_state.chat_history:
-        st.markdown(
-            f"**You:** {msg['text']}"
-            if msg["role"] == "user"
-            else f"**Assistant:** {msg['text']}"
-        )
+    
 # -------------------------------
-# Embeddings Page
+# Knowledge Base Page
 # -------------------------------
 with selected_page[1]:
-    st.header("🧠 Embeddings")
-    st.write("This page will show embedding visualizations or management tools.")
+    st.header("🧠 Knowledge Base")
+    st.caption("Upload and manage documents used to answer questions.")
+    st.info(
+        "Add PDFs or files here to expand what the assistant can answer.\n\n"
+        "Once uploaded, documents are automatically prepared for search."
+    )
 
 # -------------------------------
-# Previous Search Page
+# Evaluation Page
 # -------------------------------
 with selected_page[2]:
-    st.header("🔍 Previous Search")
-    st.write("This page will list past queries and retrieved documents.")
+    st.header("⚖️ Evaluation")
+    st.caption("Review answer quality and compare different AI models.")
+    st.info(
+        "This page helps you evaluate how well answers perform over time.\n\n"
+        "Use ratings and charts to decide which model works best for your data."
+    )

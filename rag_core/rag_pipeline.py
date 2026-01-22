@@ -1,9 +1,9 @@
-import sys
-from pathlib import Path
+# import sys
+# from pathlib import Path
 import time
-ROOT_DIR = Path(__file__).resolve().parents[2]
-if str(ROOT_DIR) not in sys.path:
-    sys.path.append(str(ROOT_DIR))
+# ROOT_DIR = Path(__file__).resolve().parents[2]
+# if str(ROOT_DIR) not in sys.path:
+#     sys.path.append(str(ROOT_DIR))
 from rag_core.src.chunker import read_json_file
 # from app.embeddings import embed_chunks, save_to_faiss
 from rag_core.src.retriever import search_docs_faiss, display_page, search_docs_milvus
