@@ -32,6 +32,7 @@ def pipeline(user_query):
     # user_query = input("Enter your query: ")
     print(f"You entered: {user_query}")
     results = search_docs_milvus(user_query)
+    relevant_chunks_execution_time = time.perf_counter() - start_time
     # results = search_docs_faiss(user_query, embeddings, embedding_model_name, k=top_k_retrieval, distance_threshold=distance_threshold)
     print(results)
     if results:
