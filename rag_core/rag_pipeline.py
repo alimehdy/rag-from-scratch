@@ -34,27 +34,31 @@ def pipeline(user_query):
     results = search_docs_milvus(user_query)
     # results = search_docs_faiss(user_query, embeddings, embedding_model_name, k=top_k_retrieval, distance_threshold=distance_threshold)
     print(results)
-    print("Reranking started...")
-    results = apply_reranking(results, user_query)
-    reranked_results = results[0]
-    relevant_files = results[1]
-    reranker_execution_time = time.perf_counter() - start_time
-    # reranked_indices = [[idx[0] for idx in reranked_results]]
-    print("reranked_results:", reranked_results)
-    # return (reranked_results, reranker_execution_time)
-    print("Building LLM prompt...")
-    prompt = build_llm_prompt(reranked_results, user_query)
-    prompt_execution_time = time.perf_counter() - start_time
-    print("Sending prompt to LLM...")
-    # return (prompt, prompt_execution_time)
-    response = call_llm(prompt)
-    print("LLM Response:")
-    print(response)
-    # TODO: add to offline storage or database
-    # add separate timing logs for each step
-    execution_time = time.perf_counter() - start_time
-    # try:
-    return (response, relevant_files, execution_time)
+    if results:
+        print("Reranking started...")
+        results = apply_reranking(results, user_query)
+        reranked_results = results[0]
+        relevant_files = results[1]
+        reranker_execution_time = time.perf_counter() - start_time
+        # reranked_indices = [[idx[0] for idx in reranked_results]]
+        print("reranked_results:", reranked_results)
+        # return (reranked_results, reranker_execution_time)
+        print("Building LLM prompt...")
+        prompt = build_llm_prompt(reranked_results, user_query)
+        prompt_execution_time = time.perf_counter() - start_time
+        print("Sending prompt to LLM...")
+        # return (prompt, prompt_execution_time)
+        response = call_llm(prompt)
+        print("LLM Response:")
+        print(response)
+        # TODO: add to offline storage or database
+        # add separate timing logs for each step
+        execution_time = time.perf_counter() - start_time
+        # try:
+        return (response, relevant_files, execution_time)
+    else:
+        execution_time = time.perf_counter() - start_time
+        return ("No relevant data found for your query!", None, execution_time)
     # except Exception as e:
     # return f"⚠️ Error returning response and execution time: {e}"
     # print("Displaying top result page...")

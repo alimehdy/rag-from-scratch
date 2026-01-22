@@ -6,8 +6,8 @@
 # if str(ROOT_DIR) not in sys.path:
 #     sys.path.append(str(ROOT_DIR))
 
-from src.chunker import text_chunking
-from src.loader import get_list_of_available_pdfs, open_and_read_pdf
+from chunker import text_chunking
+from loader import get_list_of_available_pdfs, open_and_read_pdf
 from sentence_transformers import SentenceTransformer
 # from huggingface_hub import login
 from pymilvus import (Collection, connections,

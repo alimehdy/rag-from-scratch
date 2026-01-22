@@ -59,20 +59,39 @@ with selected_page[0]:
 
             with st.spinner("Processing your query..."):
                 resp, relevant_files, exec_time = pipeline(user_input)
-            st.write(relevant_files)
-            st.write(f"**Assistant:** {resp}")
-            for i, doc in enumerate(relevant_files):
-                pdf_path = Path(doc["text_path"])
+            
+            if relevant_files:
+                # st.write(relevant_files)
+                st.write(f"**Assistant:** {resp}")
+                for idx, doc in enumerate(relevant_files):
+                    pdf_path = Path(doc["text_path"])
 
-                if st.sidebar.button(doc["title"], key=f"pdf_{i}"):
+                    if not pdf_path.exists():
+                        continue
+
+                    label = doc["title"]
+
+                    # ⭐ Highlight the best source
+                    if idx == 0:
+                        label = f"⭐ Best Source — {label}"
+
                     with open(pdf_path, "rb") as f:
                         st.sidebar.download_button(
-                            label="Download PDF",
+                            label=label,                         # visible title
                             data=f,
-                            file_name=pdf_path.name,
+                            file_name=pdf_path.name,             # actual PDF file
                             mime="application/pdf",
-                            key=f"download_{i}"
+                            key=f"pdf_download_{idx}"
                         )
+
+            else:
+                st.markdown("""
+                    <div style="text-align:center; color:gray;">
+                    <h4>🔍 No relevant data found</h4>
+                    <p>Try rephrasing your question or using different keywords.</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
             st.caption(f"⏱ {exec_time:.2f} seconds")
 
     for msg in st.session_state.chat_history:

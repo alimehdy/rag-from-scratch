@@ -45,7 +45,8 @@ def apply_reranking(results, user_query):
   relevant_files = {
     doc["text_path"]: {
         "text_path": doc["text_path"],
-        "title": doc["title"]
+        "title": doc["title"],
+        "reranking_score": doc["rerank_score"]
     }
     for doc in reranked_results
   }.values()
