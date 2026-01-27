@@ -1,30 +1,20 @@
 from ollama import chat
 from config.rag_settings import system_prompt, temperature, max_tokens, llm_streaming, llm_model_name
-import streamlit as st
+# import streamlit as st
 
-@st.cache_resource(show_spinner="Loading LLM...")
-def load_llm(model_name: str):
-    # Warm the model once
-    print("🧠 Loading LLM model into memory...")
-    chat(
-        model=model_name,
-        messages=[{"role": "system", "content": "Warmup"}],
-    )
-    return model_name
+# @st.cache_resource(show_spinner="Loading LLM...")
+# def load_llm(model_name: str):
+#     # Warm the model once
+#     print("🧠 Loading LLM model into memory...")
+#     chat(
+#         model=model_name,
+#         messages=[{"role": "system", "content": "Warmup"}],
+#     )
+#     return model_name
 
 
 def build_llm_prompt(reranked_chunks, user_query):
   context_blocks = []
-  # context_chunks_metadata = [
-  #   {
-  #       "index": i,
-  #       "title": reranked_chunks[i].get("title"),
-  #       "file": reranked_chunks[i].get("text_file_name"),
-  #       "page": reranked_chunks[i].get("page_number"),
-  #       "chunk_content": reranked_chunks[i].get("sentence_chunk")
-  #   }
-  #   for i in context_chunks_indices
-  # ]
 
   for idx, item in enumerate(reranked_chunks):
     block = f"""
@@ -51,9 +41,8 @@ def build_llm_prompt(reranked_chunks, user_query):
   return prompt
 
 def call_llm(user_prompt:str) -> str:
-    llm_model = load_llm(llm_model_name)
     response = chat(
-        model=llm_model,
+        model=llm_model_name,
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}

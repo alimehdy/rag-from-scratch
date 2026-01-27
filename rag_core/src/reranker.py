@@ -1,28 +1,28 @@
 
-import streamlit as st
+# import streamlit as st
 
 from FlagEmbedding import FlagReranker
 from config.rag_settings import (reranking_model_name, reranker_max_tokens,
                                  local_files_only)
 
-@st.cache_resource(show_spinner="Loading the reranker...")
-def load_reranker():
-  reranker = FlagReranker(reranking_model_name, 
-                                          use_fp16=True,
-                                          local_files_only=local_files_only)
-  # Warn up the re-ranker
-  _ = reranker.compute_score([("What is the capital of France", "Paris is the capital of France and the largest city of the country")],
-                             normalize=True)
-  return reranker
+# @st.cache_resource(show_spinner="Loading the reranker...")
+# def load_reranker():
+#   reranker = FlagReranker(reranking_model_name, 
+#                                           use_fp16=True,
+#                                           local_files_only=local_files_only)
+#   # Warn up the re-ranker
+#   _ = reranker.compute_score([("What is the capital of France", "Paris is the capital of France and the largest city of the country")],
+#                              normalize=True)
+#   return reranker
 
 
 def apply_reranking(results, user_query):
   reranked_results = []
-  # reranker = FlagReranker(reranking_model_name, 
-  #                                         use_fp16=True,
-  #                                         local_files_only=local_files_only)
+  reranker = FlagReranker(reranking_model_name, 
+                                          use_fp16=True,
+                                          local_files_only=local_files_only)
 
-  reranker = load_reranker()
+  # reranker = load_reranker()
 
   """
   With reranker_max_tokens set, we cut the number of tokens set to in each doc

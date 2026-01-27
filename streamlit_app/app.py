@@ -1,16 +1,6 @@
-# import sys
-# from pathlib import Path
-# from ollama import chat
-
-# ROOT_DIR = Path(__file__).resolve().parents[1]
-# if str(ROOT_DIR) not in sys.path:
-#     sys.path.append(str(ROOT_DIR))
-#     sys.path.append(str(ROOT_DIR / "rag_core"))
-
 import streamlit as st
-from rag_core.rag_pipeline import pipeline
-from config.rag_settings import llm_model_name
-
+from rag_core.rag_pipeline import search_and_retrieve
+from pathlib import Path
 # -------------------------------
 # Page configuration
 # -------------------------------
@@ -28,7 +18,6 @@ st.sidebar.info(
     "Documents used to generate the answer will appear here.\n\n"
     "This helps you understand where the information comes from."
 )
-st.toast("Thanks! Your feedback was saved 🙌", icon="✅")
 
 # -------------------------------
 # Top navigation pages
@@ -69,20 +58,36 @@ with selected_page[0]:
             st.markdown(
                 f"**You:** {user_input}"
             )
-
-
+        
+        
         if user_input.strip():
             st.session_state.chat_history.append(
                 {"role": "user", "text": user_input}
             )
 
             with st.spinner("🤖 Looking through your documents…"):
-                resp, relevant_files, exec_time = pipeline(user_input)
+                reranked_results, relevant_files, retrieving_exec_time, reranking_exec_time, total_retrieving_time = search_and_retrieve(user_input)
 
-            if relevant_files:
-                st.markdown("### 🤖 Answer")
-                st.write(resp)
+            if relevant_files and reranked_results:
+                st.markdown("### 🔎 Retrieved Context (What the AI Reads)")
 
+                with st.container(border=True):
+                    st.caption("These are the document parts sent to the AI model to generate the answer.")
+
+                    for i, (file_info, chunk_info) in enumerate(zip(relevant_files, reranked_results), 1):
+
+                        score = file_info.get("rerank_score", 0)
+                        source = file_info.get("title", "Unknown source")
+                        text = chunk_info.get("sentence_chunk", "")
+                        # Highlight best chunk
+                        badge = "⭐ Best Match" if i == 1 else f"Document {i}"
+
+                        with st.expander(f"{badge} — {source}", expanded=(i == 1)):
+                            if score:
+                                st.progress(min(score, 1.0))
+                                st.caption(f"Relevance score: {score:.2f}")
+
+                            st.write(text)
                 st.sidebar.markdown("### 📎 Related Documents")
 
                 for idx, doc in enumerate(relevant_files):
@@ -120,6 +125,24 @@ with selected_page[0]:
                         if st.button("Submit evaluation"):
                             st.toast("Thanks! Your feedback was saved 🙌", icon="✅")
 
+                # -----------------------------------
+                # ⏱ Retrieval & Reranking Metrics
+                # -----------------------------------
+                st.divider()
+
+                st.markdown("#### ⏱ Retrieval Performance")
+
+                col1, col2, col3 = st.columns(3)
+
+                # Handle dict OR float
+                col1.metric("Retrieval", f"{retrieving_exec_time.get('retrieval', 0):.2f}s")
+                col2.metric("Reranking", f"{reranking_exec_time.get('reranking', 0):.2f}s")
+                col3.metric("Total", f"{total_retrieving_time.get('total', 0):.2f}s")
+                
+                # st.markdown("### 🤖 Answer")
+                # st.write(resp)
+
+                
             else:
                 st.markdown("""
                 <div style="text-align:center; color:gray;">
@@ -128,7 +151,7 @@ with selected_page[0]:
                 </div>
                 """, unsafe_allow_html=True)
 
-            st.caption(f"⏱ Answer generated in {exec_time:.2f} seconds")
+            st.caption(f"⏱ Answer generated in {total_retrieving_time:.2f} seconds")
 
     
 # -------------------------------

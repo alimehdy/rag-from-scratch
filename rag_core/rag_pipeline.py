@@ -8,7 +8,7 @@ from rag_core.src.llm import build_llm_prompt, call_llm
 from config.rag_settings import (embedding_model_name, json_chunks,
                                  embeddings, llm_model_name, top_k_retrieval,
                                  distance_threshold)
-def pipeline(user_query):
+def search_and_retrieve(user_query):
     start_time = time.perf_counter()
     print("APP STARTED")
     # Main variables
@@ -21,6 +21,9 @@ def pipeline(user_query):
           6. Add AI Judge or RAG evaluation pipeline
           7. Save evaluation results to a file or local database
           8. Load model in streamlit app and avoid reloading on every query
+          9. Turn this into a CLI tool
+          10. Package it with Docker
+          11. Deploy it so Streamlit + RAG run like a service
     """
     
     # all_chunks = read_json_file(json_chunks)
@@ -33,18 +36,20 @@ def pipeline(user_query):
     print(results)
     if results:
         print("Reranking started...")
+        reranking_start_time = time.perf_counter()
         results = apply_reranking(results, user_query)
         reranked_results = results[0]
         relevant_files = results[1]
-        reranker_execution_time = time.perf_counter() - start_time
+        reranker_execution_time = time.perf_counter() - reranking_start_time
         # reranked_indices = [[idx[0] for idx in reranked_results]]
         print("reranked_results:", reranked_results)
-        # return (reranked_results, reranker_execution_time)
+        print("relevant_files:", relevant_files)
+        total_retrieving_time = relevant_chunks_execution_time + reranker_execution_time
+        return (reranked_results, relevant_files, relevant_chunks_execution_time, reranker_execution_time, total_retrieving_time)
         print("Building LLM prompt...")
         prompt = build_llm_prompt(reranked_results, user_query)
         prompt_execution_time = time.perf_counter() - start_time
         print("Sending prompt to LLM...")
-        # return (prompt, prompt_execution_time)
         response = call_llm(prompt)
         print("LLM Response:")
         print(response)
@@ -63,4 +68,5 @@ def pipeline(user_query):
 
 if __name__ == "__main__":
     user_query = input("Enter your query: ")
-    pipeline(user_query)
+    search_and_retrieve(user_query)
+
