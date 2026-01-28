@@ -10,6 +10,7 @@ from config.rag_settings import (embedding_model_name, json_chunks,
                                  distance_threshold)
 def search_and_retrieve(user_query):
     start_time = time.perf_counter()
+    execution_time:dict={}
     print("APP STARTED")
     # Main variables
     """
@@ -31,7 +32,7 @@ def search_and_retrieve(user_query):
     # user_query = input("Enter your query: ")
     print(f"You entered: {user_query}")
     results = search_docs_milvus(user_query)
-    relevant_chunks_execution_time = time.perf_counter() - start_time
+    execution_time["retrieving_time"] = time.perf_counter() - start_time
     # results = search_docs_faiss(user_query, embeddings, embedding_model_name, k=top_k_retrieval, distance_threshold=distance_threshold)
     print(results)
     if results:
@@ -40,27 +41,27 @@ def search_and_retrieve(user_query):
         results = apply_reranking(results, user_query)
         reranked_results = results[0]
         relevant_files = results[1]
-        reranker_execution_time = time.perf_counter() - reranking_start_time
+        execution_time["reranking_time"] = time.perf_counter() - reranking_start_time
         # reranked_indices = [[idx[0] for idx in reranked_results]]
         print("reranked_results:", reranked_results)
         print("relevant_files:", relevant_files)
-        total_retrieving_time = relevant_chunks_execution_time + reranker_execution_time
-        return (reranked_results, relevant_files, relevant_chunks_execution_time, reranker_execution_time, total_retrieving_time)
+        # return (reranked_results, relevant_files, execution_time)
         print("Building LLM prompt...")
+        llm_start_time = time.perf_counter()
         prompt = build_llm_prompt(reranked_results, user_query)
-        prompt_execution_time = time.perf_counter() - start_time
         print("Sending prompt to LLM...")
         response = call_llm(prompt)
+        execution_time["llm_time"] = time.perf_counter() - llm_start_time
         print("LLM Response:")
         print(response)
         # TODO: add to offline storage or database
         # add separate timing logs for each step
-        execution_time = time.perf_counter() - start_time
+        execution_time["total_executing_time"] = execution_time["retrieving_time"] + execution_time["reranking_time"] + execution_time["llm_time"]
         # try:
-        return (response, relevant_files, execution_time)
+        return (response, reranked_results, relevant_files, execution_time)
     else:
         execution_time = time.perf_counter() - start_time
-        return ("No relevant data found for your query!", None, execution_time)
+        return ("No relevant data found for your query!", None, None, execution_time)
     # except Exception as e:
     # return f"⚠️ Error returning response and execution time: {e}"
     # print("Displaying top result page...")

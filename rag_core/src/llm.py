@@ -41,7 +41,7 @@ def build_llm_prompt(reranked_chunks, user_query):
   return prompt
 
 def call_llm(user_prompt:str) -> str:
-    response = chat(
+    stream = chat(
         model=llm_model_name,
         messages = [
             {"role": "system", "content": system_prompt},
@@ -51,14 +51,21 @@ def call_llm(user_prompt:str) -> str:
             "stream": llm_streaming,
             "temperature": temperature,
             "max_tokens": max_tokens
-        },        
+        },
+        stream=True        
         
     )
     try: 
-      return response["message"]["content"] 
+      for chunk in stream:
+        if "message" in chunk and "content" in chunk["message"]:
+            yield chunk["message"]["content"]
+      # only if streaming is False
+      # return response["message"]["content"] 
     except Exception as e: 
-      print("⚠️ Unexpected response format:", response) 
-      return f"⚠️ Unexpected response format: {response}"
+      yield f"\n⚠️ Unexpected error: {str(e)}"
+      # only if streaming is False
+      # print("⚠️ Unexpected response format:", response) 
+      # return f"⚠️ Unexpected response format: {response}"
 
 # if __name__ == "__main__":
 #     user_prompt = input("Enter your prompt: ")
