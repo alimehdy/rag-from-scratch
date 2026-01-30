@@ -1,3 +1,4 @@
+import time
 from ollama import chat
 from config.rag_settings import system_prompt, temperature, max_tokens, llm_streaming, llm_model_name
 # import streamlit as st
@@ -40,7 +41,7 @@ def build_llm_prompt(reranked_chunks, user_query):
 
   return prompt
 
-def call_llm(user_prompt:str) -> str:
+def call_llm_with_stream(user_prompt:str) -> any:
     stream = chat(
         model=llm_model_name,
         messages = [
@@ -59,13 +60,33 @@ def call_llm(user_prompt:str) -> str:
       for chunk in stream:
         if "message" in chunk and "content" in chunk["message"]:
             yield chunk["message"]["content"]
-      # only if streaming is False
-      # return response["message"]["content"] 
     except Exception as e: 
       yield f"\n⚠️ Unexpected error: {str(e)}"
-      # only if streaming is False
-      # print("⚠️ Unexpected response format:", response) 
-      # return f"⚠️ Unexpected response format: {response}"
+    # finally:
+    #   llm_exec_time = time.perf_counter() - start_time
+    #   yield {"__end__": llm_exec_time}
+
+def call_llm_no_stream(user_prompt:str) -> str:
+    start_time = time.perf_counter()
+    response = chat(
+        model=llm_model_name,
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        options = {
+            "stream": llm_streaming,
+            "temperature": temperature,
+            "max_tokens": max_tokens
+        },
+        stream=False        
+        
+    )
+    llm_exec_time = time.perf_counter() - start_time
+    try: 
+      return (response["message"]["content"] , llm_exec_time)
+    except Exception as e: 
+      return (f"⚠️ Unexpected error: {str(e)}", llm_exec_time)
 
 # if __name__ == "__main__":
 #     user_prompt = input("Enter your prompt: ")

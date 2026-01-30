@@ -1,3 +1,4 @@
+import time
 import streamlit as st
 from rag_core.rag_pipeline import search_and_retrieve
 from pathlib import Path
@@ -104,7 +105,9 @@ with selected_page[0]:
         response_container.markdown(full_response)
 
         st.session_state.llm_answer = full_response
-
+        st.session_state.tracked_time['llm_time'] = time.perf_counter() - tracked_time.get('llm_start_time', 0)
+        st.session_state.tracked_time['total_executing_time'] = tracked_time.get('total_executing_time', 0) + st.session_state.tracked_time['llm_time']
+    
     # if st.session_state.reranked_results:
 
         reranked_results = st.session_state.reranked_results
