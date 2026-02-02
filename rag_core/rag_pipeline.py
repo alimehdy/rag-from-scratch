@@ -5,12 +5,7 @@ from rag_core.src.retriever import search_docs_milvus
 from rag_core.src.reranker import apply_reranking
 from rag_core.src.llm import build_llm_prompt, call_llm_with_stream
 
-def search_and_retrieve(user_query):
-    start_time = time.perf_counter()
-    execution_time:dict={}
-    print("APP STARTED")
-    # Main variables
-    """
+"""
     TODO: 1. Make the paths configurable via a config file or command line arguments --> Done
           2. Add error handling for file operations and user inputs
           3. Modularize the code further if needed --> Done
@@ -22,10 +17,14 @@ def search_and_retrieve(user_query):
           9. Turn this into a CLI tool
           10. Package it with Docker
           11. Deploy it so Streamlit + RAG run like a service
-    """
+"""
     
+def search_and_retrieve(user_query):
+    start_time = time.perf_counter()
+    execution_time:dict={}
+    print("APP STARTED")
+    # Main variables
     # all_chunks = read_json_file(json_chunks)
-
     # user_query = input("Enter your query: ")
     print(f"You entered: {user_query}")
     results = search_docs_milvus(user_query)
@@ -45,17 +44,15 @@ def search_and_retrieve(user_query):
         # return (reranked_results, relevant_files, execution_time)
         print("Building LLM prompt...")
         llm_start_time = time.perf_counter()
-        prompt = build_llm_prompt(reranked_results, user_query)
-        print("Sending prompt to LLM...")
-        response = call_llm_with_stream(prompt)
-        print("LLM Response:")
-        print(response)
-        # TODO: add to offline storage or database
-        # add separate timing logs for each 
-        execution_time["llm_start_time"] = llm_start_time
-        execution_time["total_executing_time"] = execution_time["retrieving_time"] + execution_time["reranking_time"]
-        # try:
-        return (response, reranked_results, relevant_files, execution_time)
+        if reranked_results and relevant_files:
+            prompt = build_llm_prompt(reranked_results, user_query)
+            print("Sending prompt to LLM...")
+            response = call_llm_with_stream(prompt, execution_time)
+            print("LLM Response:")
+            print(response)
+            return (response, reranked_results, relevant_files, execution_time)
+        else:
+            return ("No relevant data found for your query!", None, None, execution_time)
     else:
         execution_time = time.perf_counter() - start_time
         return ("No relevant data found for your query!", None, None, execution_time)

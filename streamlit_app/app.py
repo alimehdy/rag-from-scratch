@@ -92,7 +92,7 @@ with selected_page[0]:
     # ==========================================================
     # DISPLAY LLM RESULTS 
     # ==========================================================
-    if st.session_state.llm_answer:
+    if st.session_state.llm_answer and st.session_state.relevant_files and st.session_state.reranked_results:
         st.markdown("### 🤖 Answer")
 
         response_container = st.empty()
@@ -105,8 +105,6 @@ with selected_page[0]:
         response_container.markdown(full_response)
 
         st.session_state.llm_answer = full_response
-        st.session_state.tracked_time['llm_time'] = time.perf_counter() - tracked_time.get('llm_start_time', 0)
-        st.session_state.tracked_time['total_executing_time'] = tracked_time.get('total_executing_time', 0) + st.session_state.tracked_time['llm_time']
     
     # if st.session_state.reranked_results:
 
@@ -159,9 +157,9 @@ with selected_page[0]:
         col1, col2, col3 = st.columns(3)
         col1.metric("Retrieval", f"{tracked_time.get('retrieving_time', 0):.2f}s")
         col2.metric("Reranking", f"{tracked_time.get('reranking_time', 0):.2f}s")
-        col3.metric("LLM", f"{tracked_time.get('llm_time', 0):.2f}s")
-
-        st.caption(f"⏱ Answer generated in {tracked_time.get('total_executing_time', 0):.2f} seconds")
+        col3.metric("LLM", f"{tracked_time.get('llm_executing_time', 0):.2f}s")
+        total_time = tracked_time.get('retrieving_time', 0) + tracked_time.get('reranking_time', 0) + tracked_time.get('llm_executing_time', 0)
+        st.caption(f"⏱ Answer generated in {total_time:.2f} seconds")
 
         # ==========================================================
         # ⭐ EVALUATION FORM (NO MORE AUTO RERUN)
@@ -181,6 +179,8 @@ with selected_page[0]:
                     }
                     st.toast("Thanks! Your feedback was saved 🙌", icon="✅")
                     st.write(user_evaluation)
+    elif st.session_state.last_question: 
+        st.info("🔍 No matching context was retrieved from the knowledge base for this query.")
 
 # ==========================================================
 # 🧠 KNOWLEDGE BASE PAGE

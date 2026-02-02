@@ -41,7 +41,8 @@ def build_llm_prompt(reranked_chunks, user_query):
 
   return prompt
 
-def call_llm_with_stream(user_prompt:str) -> any:
+def call_llm_with_stream(user_prompt:str, execution_time: dict) -> any:
+    start_time = time.perf_counter()
     stream = chat(
         model=llm_model_name,
         messages = [
@@ -62,8 +63,8 @@ def call_llm_with_stream(user_prompt:str) -> any:
             yield chunk["message"]["content"]
     except Exception as e: 
       yield f"\n⚠️ Unexpected error: {str(e)}"
-    # finally:
-    #   llm_exec_time = time.perf_counter() - start_time
+    finally:
+      execution_time["llm_executing_time"] = time.perf_counter() - start_time
     #   yield {"__end__": llm_exec_time}
 
 def call_llm_no_stream(user_prompt:str) -> str:

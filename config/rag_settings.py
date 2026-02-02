@@ -30,7 +30,7 @@ metadata_file_name = "chunks_metadata.json"
 # LLM settings
 llm_model_name = "qwen2.5:3b"  # Update this with your desired LLM model name
 temperature = 0.7
-max_tokens = 1000
+max_tokens = 500
 llm_streaming = False
 system_prompt = f"""
     You are a knowledgeable assistant.
