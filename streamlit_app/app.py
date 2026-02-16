@@ -1,6 +1,7 @@
 import time
 import streamlit as st
 from rag_core.rag_pipeline import search_and_retrieve
+from rag_core.src.db_handler import insert_user_feedback
 from pathlib import Path
 
 # -------------------------------
@@ -83,7 +84,7 @@ with selected_page[0]:
         with st.spinner("🤖 Looking through your documents…"):
             llm_answer, reranked_results, relevant_files, tracked_time = search_and_retrieve(user_input)
 
-        # Save results to session state (THIS IS THE FIX 🔥)
+        # Save results to session state
         st.session_state.reranked_results = reranked_results
         st.session_state.relevant_files = relevant_files
         st.session_state.tracked_time = tracked_time
@@ -162,7 +163,7 @@ with selected_page[0]:
         st.caption(f"⏱ Answer generated in {total_time:.2f} seconds")
 
         # ==========================================================
-        # ⭐ EVALUATION FORM (NO MORE AUTO RERUN)
+        # ⭐ EVALUATION FORM
         # ==========================================================
         with st.expander("⭐ Evaluate this answer", expanded=True):
             with st.form("evaluation_form"):
@@ -177,8 +178,19 @@ with selected_page[0]:
                         "rating": rating,
                         "feedback": feedback
                     }
-                    st.toast("Thanks! Your feedback was saved 🙌", icon="✅")
-                    st.write(user_evaluation)
+                    with st.spinner("Saving your feedback…"):
+                        insert_res = insert_user_feedback(
+                            trace_uuid=None,  # You can pass the actual trace UUID here if available
+                            user_query_hash=None,  # You can pass the actual user query hash here if available
+                            timestamp=time.time(),
+                            feedback_on="rag_and_llm_results",
+                            feedback_rating=rating,
+                            feedback_value=feedback
+                        )
+                    if insert_res:
+                        st.toast("Thanks! Your feedback was saved 🙌", icon="✅")
+                    else:
+                        st.toast("⚠️ Oops! There was an issue saving your feedback.", icon="❌")
     elif st.session_state.last_question: 
         st.info("🔍 No matching context was retrieved from the knowledge base for this query.")
 

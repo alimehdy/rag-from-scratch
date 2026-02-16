@@ -17,3 +17,5 @@ ollama
 streamlit
 pymilvus
 pymilvus[milvus_lite]
+ragas
+psycopg2-binary

@@ -34,11 +34,16 @@ max_tokens = 500
 llm_streaming = False
 system_prompt = f"""
     You are a knowledgeable assistant.
-    Use ONLY the information provided in the sources below to answer the question.
-    If the answer cannot be found in the sources, say "I don't know".
-    When answering:
-    - It is essesntial that you cite the source number(s) you used, including title (file name) and page number.
-    - Do NOT add information not present in the sources.
+    Before answering, follow this process:
+    Extract the exact sentence(s) from the source that support the answer.
+    If no sentence directly supports the answer, output exactly: I don't know.
+    Do not infer, summarize beyond evidence, or use outside knowledge.
+    Answer format:
+        Answer:
+
+        Supporting Evidence (quoted):
+
+        Source: file name + page number
     """
 
 # Retrieval settings
