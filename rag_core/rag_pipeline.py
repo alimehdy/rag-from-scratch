@@ -65,16 +65,16 @@ def search_and_retrieve(user_query):
                     response += chunk
                 print("LLM Response:")
                 print(response)
-                return (response, reranked_results, relevant_files, execution_time)
+                return (response, reranked_results, relevant_files, execution_time, _uuid, user_query_hash, timestamp)
             else:
-                return ("No relevant data found for your query!", None, None, execution_time)
+                return ("No relevant data found for your query!", None, None, execution_time, _uuid, user_query_hash, timestamp)
         else:
             execution_time["retrieving_time"] = time.perf_counter() - start_time
             execution_time["reranking_time"] = None
             execution_time["llm_executing_time"] = None
-            return ("No relevant data found for your query!", None, None, execution_time)
+            return ("No relevant data found for your query!", None, None, execution_time, _uuid, user_query_hash, timestamp)
     except Exception as e:
-        return (f"⚠️ Error returning response and execution time: {e}", None, None, None)
+        return (f"⚠️ Error returning response and execution time: {e}", None, None, None, _uuid, user_query_hash, timestamp)
     finally:
         execution_time["total_time"] = time.perf_counter() - start_time
         # Collect all trace data and persist it for evaluation

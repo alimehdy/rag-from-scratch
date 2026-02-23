@@ -38,12 +38,12 @@ def establish_db_connection():
         return None
 
 def insert_user_feedback(trace_uuid, user_query_hash, timestamp, feedback_on, feedback_rating, feedback_value):
-    conn = establish_db_connection()
-    if conn:
-        try:
+    try:
+        conn = establish_db_connection()
+        if conn:
             cur = conn.cursor()
             cur.execute("""
-                INSERT INTO rag_schema.user_feedback (
+                INSERT INTO rag_schema.user_feedbacks (
                             trace_uuid, user_query_hash, created_at,
                             feedback_on, feedback_rating, feedback_value)
                         VALUES (%s,%s,%s,%s,%s,%s)
@@ -62,10 +62,10 @@ def insert_user_feedback(trace_uuid, user_query_hash, timestamp, feedback_on, fe
             cur.close()
             conn.close()
             return True
-        except Exception as e:
-            conn.rollback()
-            print(f"Error inserting user feedback: {e}")
-    return False  
+    except Exception as e:
+        conn.rollback()
+        print(f"Error inserting user feedback: {e}")
+        return False
 
 def insert_rag_trace(_uuid, user_query_hash, timestamp, user_prompt, llm_response,
                      retrieved_docs, reranked_docs, timing_info, device
