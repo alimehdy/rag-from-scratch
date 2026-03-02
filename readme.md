@@ -37,6 +37,8 @@ https://raw.githubusercontent.com/milvus-io/milvus/refs/heads/master/deployments
 
 > CREATE TABLE IF NOT EXISTS rag_schema.user_feedbacks (id BIGSERIAL PRIMARY KEY, trace_uuid UUID NOT NULL, user_query_hash TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), feedback_on TEXT, feedback_rating INT, feedback_value TEXT);
 
+> CREATE TABLE IF NOT EXISTS rag_schema.rag_response_evaluation; (id BIGSERIAL PRIMARY KEY, trace_uuid UUID NOT NULL, context_precision DECIMAL, context_recall DECIMAL, faithfulness DECIMAL, answer_relevancy DECIMAL);
+
 
 3. Set the default schema permanently
 > ALTER ROLE postgres SET search_path TO rag_schema;

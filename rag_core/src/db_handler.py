@@ -129,7 +129,22 @@ def insert_rag_trace(_uuid, user_query_hash, timestamp, user_prompt, llm_respons
         print(f"Error inserting trace: {e}")
         return False
 
-
+def get_data_for_evaluation():
+    try:
+        conn = establish_db_connection()
+        if conn:
+            cur = conn.cursor()
+            data = cur.execute("""
+                SELECT trace_uuid, user_query_hash, created_at, user_prompt, llm_response
+                FROM rag_schema.rag_traces
+                WHERE trace_uuid not in (
+                    SELECT trace_uuid FROM rag_schema.rag_response_evaluations)
+                """
+            )
+            return data.fetchall()
+    except Exception as e:
+        print(f"Error fetching data for evaluation: {e}")
+        return f"Error fetching data for evaluation: {e}"
 
 # -------------------------------
 # Run the function
