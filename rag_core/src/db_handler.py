@@ -134,14 +134,19 @@ def get_data_for_evaluation():
         conn = establish_db_connection()
         if conn:
             cur = conn.cursor()
-            data = cur.execute("""
+            cur.execute(
+                """
                 SELECT trace_uuid, user_query_hash, created_at, user_prompt, llm_response
                 FROM rag_schema.rag_traces
                 WHERE trace_uuid not in (
                     SELECT trace_uuid FROM rag_schema.rag_response_evaluations)
+                ORDER BY created_at DESC
                 """
             )
-            return data.fetchall()
+            # returned data is a list of tuples, 
+            # we can convert it to a list of dicts for better readability for the RAGAS framework
+            # this action will be done in the evaluation module
+            return cur.fetchall()
     except Exception as e:
         print(f"Error fetching data for evaluation: {e}")
         return f"Error fetching data for evaluation: {e}"
@@ -151,4 +156,7 @@ def get_data_for_evaluation():
 # -------------------------------
 if __name__ == "__main__":
     # nothing for now, this is just a module to be imported and used in the main pipeline
+    data = get_data_for_evaluation()
+    print(data)
     pass
+

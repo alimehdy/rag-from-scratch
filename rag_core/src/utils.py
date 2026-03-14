@@ -3,6 +3,12 @@ from hashlib import md5
 from datetime import datetime
 import torch
 
+def tuple_to_dict(data, column_names):
+    # Get column names from the cursor description
+    result = []
+    for row in data:
+        result.append({col: val for col, val in zip(column_names, row)})
+    return result
 def get_device():
     # Check if CUDA is available, otherwise use CPU
     try:
